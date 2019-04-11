@@ -12,7 +12,7 @@ library(shiny)
 require(magick)
 require(ComplexHeatmap)
 
-makeMatrix <- function(file, type="numeric") {
+make_matrix <- function(file, type="numeric") {
     image <- image_read(file)
     # image
     flat <- image_flatten(image, 'Modulate')
@@ -24,7 +24,7 @@ makeMatrix <- function(file, type="numeric") {
     non_white
 }
 
-makeHeatmap <- function(matrix) {
+make_heatmap <- function(matrix) {
     if (is.null(matrix)){
         return(plot.new())
     }
@@ -37,6 +37,16 @@ makeHeatmap <- function(matrix) {
     draw(hm)
 }
 
+make_scatterplot <- function(matrix, point_size=1) {
+    if (is.null(matrix)){
+        return(plot.new())
+    }
+    xy_coord <- as.data.frame(which(matrix == 1, arr.ind=TRUE))
+    ggplot(xy_coord) +
+        geom_point(aes(row, -col), size=point_size) +
+        theme_void()
+}
+
 # Define UI for application that draws a histogram
 ui <- fluidPage(
    
@@ -46,12 +56,14 @@ ui <- fluidPage(
    # Sidebar with a slider input for number of bins 
    sidebarLayout(
       sidebarPanel(
-         fileInput(inputId = "imageFile", label = "Input  file", multiple = FALSE, accept = c("png"))
+         fileInput(inputId = "imageFile", label = "Input  file", multiple = FALSE, accept = c("png")),
+         numericInput(inputId = "point_size", label = "Point size", value = 1, min = 0.1, max = 5, step = 0.1)
       ),
       
       # Show a plot of the generated distribution
       mainPanel(
-          plotOutput(outputId = "heatmap")
+          column(width = 12, plotOutput(outputId = "scatterplot")),
+          column(width = 12, plotOutput(outputId = "heatmap"))
       )
    )
 )
@@ -64,11 +76,15 @@ server <- function(input, output) {
     )
     
     observeEvent(input$imageFile, {
-        rObjects$imageData <- makeMatrix(input$imageFile[1, "datapath", drop=TRUE])
+        rObjects$imageData <- make_matrix(file = input$imageFile[1, "datapath", drop=TRUE], type = "integer")
     })
    
    output$heatmap <- renderPlot({
-       makeHeatmap(rObjects$imageData)
+       make_heatmap(matrix = rObjects$imageData)
+   })
+   
+   output$scatterplot <- renderPlot({
+       make_scatterplot(matrix = rObjects$imageData, point_size = input$point_size)
    })
 }
 
