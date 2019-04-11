@@ -15,7 +15,7 @@ require(ComplexHeatmap)
 makeMatrix <- function(file, type="numeric") {
     image <- image_read(file)
     # image
-    flat <- image_flatten(aaron, 'Modulate')
+    flat <- image_flatten(image, 'Modulate')
     # flat
     data <- image_data(flat)
     # data
@@ -25,9 +25,11 @@ makeMatrix <- function(file, type="numeric") {
 }
 
 makeHeatmap <- function(matrix) {
-    image_matrix <- makeMatrix("~/Dropbox/Screenshots/aaron.png", "integer")
+    if (is.null(matrix)){
+        return(plot.new())
+    }
     hm <- Heatmap(
-        matrix = t(image_matrix),
+        matrix = t(matrix),
         col = c("1"="black", "0"="white"),
         cluster_rows = FALSE, cluster_columns = FALSE,
         show_heatmap_legend = FALSE
@@ -49,7 +51,7 @@ ui <- fluidPage(
       
       # Show a plot of the generated distribution
       mainPanel(
-         plotOutput("heatmap")
+          plotOutput(outputId = "heatmap")
       )
    )
 )
