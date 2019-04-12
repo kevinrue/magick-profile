@@ -14,7 +14,7 @@ source("global.R")
 # Define UI for application that draws a histogram
 ui <- fluidPage(# Application title
     titlePanel("Profile plot"),
-    
+
     # Sidebar with a slider input for number of bins
     sidebarLayout(
         sidebarPanel(
@@ -54,12 +54,27 @@ ui <- fluidPage(# Application title
                 value = "TSNE"
             )
         ),
-        
+
         # Show a plot of the generated distribution
         mainPanel(
-            h1("Jitter plot"), column(width = 12, plotOutput(outputId = "jitterplot")),
-            h1("Scatter plot"), column(width = 12, plotOutput(outputId = "scatterplot")),
-            h1("Heat map"), column(width = 12, plotOutput(outputId = "heatmap"))
+            fluidRow(
+                column(
+                    width = 6,
+                    h1("Original image"),
+                    imageOutput(outputId = "original_img")
+                )
+            ),
+            fluidRow(
+                column(
+                    width = 6,
+                    h1("Jitter plot"), column(width = 12, plotOutput(outputId = "jitterplot")),
+                    h1("Scatter plot"), column(width = 12, plotOutput(outputId = "scatterplot"))
+                ),
+                column(
+                    width = 6,
+                    h1("Heat map"), column(width = 12, plotOutput(outputId = "heatmap"))
+                )
+            )
         )
     ))
 
@@ -73,36 +88,59 @@ server <- function(input, output) {
         imageObject = defaultImageObject,
         imageMatrix = defaultImageMatrix
     )
-    
+
     observeEvent(input$imageFile, {
-        rObjects$imageObject <- image_read(path = input$imageFile[1, "datapath", drop = TRUE])
+        withProgress({
+            rObjects$imageObject <- image_read(path = input$imageFile[1, "datapath", drop = TRUE])
+        },
+        message = "Loading image...")
     })
-    
+
     observeEvent(rObjects$imageObject, {
-        rObjects$imageMatrix <- make_matrix(rObjects$imageObject)
+        withProgress({
+            rObjects$imageMatrix <- make_matrix(rObjects$imageObject)
+        },
+        message = "Generating matrix from image...")
     })
-    
+
+    output$original_img <- renderImage({
+        tmpfile <- rObjects$imageObject %>%
+            image_resize("30%") %>%
+            image_write(tempfile(fileext='jpg'), format = 'jpg')
+        # Return a list
+        list(src = tmpfile, contentType = "image/jpeg")
+    })
+
     output$heatmap <- renderPlot({
-        make_heatmap(matrix = rObjects$imageMatrix)
+        withProgress({
+            make_heatmap(matrix = rObjects$imageMatrix)
+        },
+        message = "Generating the heatmap...")
     })
-    
+
     output$scatterplot <- renderPlot({
-        make_scatterplot(
-            matrix = rObjects$imageMatrix,
-            downsample = input$downsample,
-            point_size = input$point_size,
-            axis_label_prefix = input$axis_prefix
-        )
+        withProgress({
+            make_scatterplot(
+                matrix = rObjects$imageMatrix,
+                downsample = input$downsample,
+                point_size = input$point_size,
+                axis_label_prefix = input$axis_prefix
+            )
+        },
+        message = "Generating the scatterplot from the matrix...")
     })
-    
+
     output$jitterplot <- renderPlot({
-        make_jitterplot(
-            matrix = rObjects$imageMatrix,
-            downsample = input$downsample,
-            point_size = input$point_size,
-            jitter = input$point_jitter,
-            axis_label_prefix = input$axis_prefix
-        )
+        withProgress({
+            make_jitterplot(
+                matrix = rObjects$imageMatrix,
+                downsample = input$downsample,
+                point_size = input$point_size,
+                jitter = input$point_jitter,
+                axis_label_prefix = input$axis_prefix
+            )
+        },
+        message = "Generating a jitterplot...")
     })
 }
 
