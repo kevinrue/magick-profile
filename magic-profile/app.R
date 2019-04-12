@@ -11,6 +11,7 @@ library(shiny)
 
 require(magick)
 require(ComplexHeatmap)
+require(ggplot2)
 require(iSEE)
 
 make_matrix <- function(file, type="numeric") {
