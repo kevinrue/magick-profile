@@ -39,17 +39,20 @@ make_heatmap <- function(matrix) {
     draw(hm)
 }
 
-make_scatterplot <- function(matrix, point_size=1) {
+make_scatterplot <- function(matrix, point_size=1, axis_label_prefix = "TSNE") {
     if (is.null(matrix)){
         return(plot.new())
     }
     xy_coord <- as.data.frame(which(matrix == 1, arr.ind=TRUE))
     ggplot(xy_coord) +
         geom_point(aes(row, -col), size=point_size) +
-        theme_void()
+        labs(
+            x = paste(axis_label_prefix, 1L),
+            y = paste(axis_label_prefix, 2L)
+        ) + theme(panel.background = element_blank())
 }
 
-make_jitterplot <- function(matrix, downsample = FALSE, point_size=1, jitter_x=1, jitter_y=1) {
+make_jitterplot <- function(matrix, downsample = FALSE, point_size=1, jitter=1, axis_label_prefix = "TSNE") {
     if (is.null(matrix)){
         return(plot.new())
     }
@@ -59,8 +62,11 @@ make_jitterplot <- function(matrix, downsample = FALSE, point_size=1, jitter_x=1
         xy_coord <- xy_coord[keep, ]
     }
     ggplot(xy_coord) +
-        geom_jitter(aes(row, -col), size=point_size, width = jitter_x, height = jitter_y) +
-        theme_void()
+        geom_jitter(aes(row, -col), size=point_size, width = jitter, height = jitter) +
+        labs(
+            x = paste(axis_label_prefix, 1L),
+            y = paste(axis_label_prefix, 2L)
+        ) + theme(panel.background = element_blank())
 }
 
 # Define UI for application that draws a histogram
@@ -75,13 +81,17 @@ ui <- fluidPage(
          fileInput(inputId = "imageFile", label = "Input  file", multiple = FALSE, accept = c("png")),
          numericInput(inputId = "downsample", label = "Resolution", value = 200, min = 50, max = 1000, step = 10),
          numericInput(inputId = "point_size", label = "Point size", value = 0.1, min = 0.1, max = 5, step = 0.1),
-         numericInput(inputId = "jitter", label = "Jitter width/height", value = 5, min = 0, max = 20, step = 1)
+         numericInput(inputId = "point_jitter", label = "Jitter width/height", value = 5, min = 0, max = 20, step = 1),
+         textInput(inputId = "axis_prefix", label = "Axis label prefix", value = "TSNE")
       ),
       
       # Show a plot of the generated distribution
       mainPanel(
+          h1("Jitter plot"),
           column(width = 12, plotOutput(outputId = "jitterplot")),
+          h1("Scatter plot"),
           column(width = 12, plotOutput(outputId = "scatterplot")),
+          h1("Heat map"),
           column(width = 12, plotOutput(outputId = "heatmap"))
       )
    )
@@ -91,7 +101,7 @@ ui <- fluidPage(
 server <- function(input, output) {
     
     rObjects <- reactiveValues(
-        imageData = NULL
+        imageData = make_matrix(file = "KennedyProfilePicture.jpg", type = "integer")
     )
     
     observeEvent(input$imageFile, {
@@ -110,7 +120,9 @@ server <- function(input, output) {
        make_jitterplot(
            matrix = rObjects$imageData, downsample = input$downsample,
            point_size = input$point_size,
-           jitter_x = input$jitter, jitter_y = input$jitter)
+           jitter = input$point_jitter,
+           axis_label_prefix = input$axis_prefix
+        )
    })
 }
 
