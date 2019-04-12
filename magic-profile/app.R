@@ -87,8 +87,12 @@ server <- function(input, output) {
     })
     
     output$scatterplot <- renderPlot({
-        make_scatterplot(matrix = rObjects$imageMatrix,
-                         point_size = input$point_size)
+        make_scatterplot(
+            matrix = rObjects$imageMatrix,
+            downsample = input$downsample,
+            point_size = input$point_size,
+            axis_label_prefix = input$axis_prefix
+        )
     })
     
     output$jitterplot <- renderPlot({

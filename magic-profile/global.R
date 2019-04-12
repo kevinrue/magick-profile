@@ -28,6 +28,7 @@ make_heatmap <- function(matrix) {
 }
 
 make_scatterplot <- function(matrix,
+                             downsample = FALSE,
                              point_size = 1,
                              axis_label_prefix = "TSNE") {
     if (is.null(matrix)) {
