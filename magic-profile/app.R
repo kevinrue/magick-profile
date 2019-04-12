@@ -9,122 +9,98 @@
 
 library(shiny)
 
-require(magick)
-require(ComplexHeatmap)
-require(ggplot2)
-require(iSEE)
-
-make_matrix <- function(file, type="numeric") {
-    image <- image_read(file)
-    # image
-    flat <- image_flatten(image, 'Modulate')
-    # flat
-    data <- image_data(flat)
-    # data
-    non_white <- data[1, , ] != "ff"
-    storage.mode(non_white) <- "integer"
-    non_white
-}
-
-make_heatmap <- function(matrix) {
-    if (is.null(matrix)){
-        return(plot.new())
-    }
-    hm <- Heatmap(
-        matrix = t(matrix),
-        col = c("1"="black", "0"="white"),
-        cluster_rows = FALSE, cluster_columns = FALSE,
-        show_heatmap_legend = FALSE
-    )
-    draw(hm)
-}
-
-make_scatterplot <- function(matrix, point_size=1, axis_label_prefix = "TSNE") {
-    if (is.null(matrix)){
-        return(plot.new())
-    }
-    xy_coord <- as.data.frame(which(matrix == 1, arr.ind=TRUE))
-    ggplot(xy_coord) +
-        geom_point(aes(row, -col), size=point_size) +
-        labs(
-            x = paste(axis_label_prefix, 1L),
-            y = paste(axis_label_prefix, 2L)
-        ) + theme(panel.background = element_blank())
-}
-
-make_jitterplot <- function(matrix, downsample = FALSE, point_size=1, jitter=1, axis_label_prefix = "TSNE") {
-    if (is.null(matrix)){
-        return(plot.new())
-    }
-    xy_coord <- as.data.frame(which(matrix == 1, arr.ind=TRUE))
-    if (!isFALSE(downsample)) {
-        keep <- subsetPointsByGrid(X = xy_coord$row, Y = xy_coord$col, resolution = downsample)
-        xy_coord <- xy_coord[keep, ]
-    }
-    ggplot(xy_coord) +
-        geom_jitter(aes(row, -col), size=point_size, width = jitter, height = jitter) +
-        labs(
-            x = paste(axis_label_prefix, 1L),
-            y = paste(axis_label_prefix, 2L)
-        ) + theme(panel.background = element_blank())
-}
+source("global.R")
 
 # Define UI for application that draws a histogram
-ui <- fluidPage(
-   
-   # Application title
-   titlePanel("Profile plot"),
-   
-   # Sidebar with a slider input for number of bins 
-   sidebarLayout(
-      sidebarPanel(
-         fileInput(inputId = "imageFile", label = "Input  file", multiple = FALSE, accept = c("png")),
-         numericInput(inputId = "downsample", label = "Resolution", value = 200, min = 50, max = 1000, step = 10),
-         numericInput(inputId = "point_size", label = "Point size", value = 0.1, min = 0.1, max = 5, step = 0.1),
-         numericInput(inputId = "point_jitter", label = "Jitter width/height", value = 5, min = 0, max = 20, step = 1),
-         textInput(inputId = "axis_prefix", label = "Axis label prefix", value = "TSNE")
-      ),
-      
-      # Show a plot of the generated distribution
-      mainPanel(
-          h1("Jitter plot"),
-          column(width = 12, plotOutput(outputId = "jitterplot")),
-          h1("Scatter plot"),
-          column(width = 12, plotOutput(outputId = "scatterplot")),
-          h1("Heat map"),
-          column(width = 12, plotOutput(outputId = "heatmap"))
-      )
-   )
-)
+ui <- fluidPage(# Application title
+    titlePanel("Profile plot"),
+    
+    # Sidebar with a slider input for number of bins
+    sidebarLayout(
+        sidebarPanel(
+            fileInput(
+                inputId = "imageFile",
+                label = "Input  file",
+                multiple = FALSE,
+                accept = c("png")
+            ),
+            numericInput(
+                inputId = "downsample",
+                label = "Resolution",
+                value = 200,
+                min = 50,
+                max = 1000,
+                step = 10
+            ),
+            numericInput(
+                inputId = "point_size",
+                label = "Point size",
+                value = 0.1,
+                min = 0.1,
+                max = 5,
+                step = 0.1
+            ),
+            numericInput(
+                inputId = "point_jitter",
+                label = "Jitter width/height",
+                value = 5,
+                min = 0,
+                max = 20,
+                step = 1
+            ),
+            textInput(
+                inputId = "axis_prefix",
+                label = "Axis label prefix",
+                value = "TSNE"
+            )
+        ),
+        
+        # Show a plot of the generated distribution
+        mainPanel(
+            h1("Jitter plot"), column(width = 12, plotOutput(outputId = "jitterplot")),
+            h1("Scatter plot"), column(width = 12, plotOutput(outputId = "scatterplot")),
+            h1("Heat map"), column(width = 12, plotOutput(outputId = "heatmap"))
+        )
+    ))
+
+defaultImageURL <- "https://res.cloudinary.com/dwccfildc/c_limit,w_1140/v1523428401/kennedy/haiku.profile/55404b0dd6a64cc5800605c46bc3b694/haiku.profiles.portrait/7f55c8cd346a42429d7a6264f752649f/image.jpg"
+defaultImageObject <- image_read(path = defaultImageURL)
+defaultImageMatrix <- make_matrix(defaultImageObject, type = "integer")
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-    
     rObjects <- reactiveValues(
-        imageData = make_matrix(file = "KennedyProfilePicture.jpg", type = "integer")
+        imageObject = defaultImageObject,
+        imageMatrix = defaultImageMatrix
     )
     
     observeEvent(input$imageFile, {
-        rObjects$imageData <- make_matrix(file = input$imageFile[1, "datapath", drop=TRUE], type = "integer")
+        rObjects$imageObject <- image_read(path = input$imageFile[1, "datapath", drop = TRUE])
     })
-   
-   output$heatmap <- renderPlot({
-       make_heatmap(matrix = rObjects$imageData)
-   })
-   
-   output$scatterplot <- renderPlot({
-       make_scatterplot(matrix = rObjects$imageData, point_size = input$point_size)
-   })
-   
-   output$jitterplot <- renderPlot({
-       make_jitterplot(
-           matrix = rObjects$imageData, downsample = input$downsample,
-           point_size = input$point_size,
-           jitter = input$point_jitter,
-           axis_label_prefix = input$axis_prefix
+    
+    observeEvent(rObjects$imageObject, {
+        rObjects$imageMatrix <- make_matrix(rObjects$imageObject)
+    })
+    
+    output$heatmap <- renderPlot({
+        make_heatmap(matrix = rObjects$imageMatrix)
+    })
+    
+    output$scatterplot <- renderPlot({
+        make_scatterplot(matrix = rObjects$imageMatrix,
+                         point_size = input$point_size)
+    })
+    
+    output$jitterplot <- renderPlot({
+        make_jitterplot(
+            matrix = rObjects$imageMatrix,
+            downsample = input$downsample,
+            point_size = input$point_size,
+            jitter = input$point_jitter,
+            axis_label_prefix = input$axis_prefix
         )
-   })
+    })
 }
 
-# Run the application 
+# Run the application
 shinyApp(ui = ui, server = server)
