@@ -57,10 +57,25 @@ ui <- fluidPage(# Application title
 
         # Show a plot of the generated distribution
         mainPanel(
-            uiOutput(outputId = "example"),
-            h1("Jitter plot"), column(width = 12, plotOutput(outputId = "jitterplot")),
-            h1("Scatter plot"), column(width = 12, plotOutput(outputId = "scatterplot")),
-            h1("Heat map"), column(width = 12, plotOutput(outputId = "heatmap"))
+            fluidRow(column(width = 12), uiOutput(outputId = "example")),
+            fluidRow(
+                column(
+                    width = 6,
+                    h1("Original image"),
+                    imageOutput(outputId = "original_img")
+                )
+            ),
+            fluidRow(
+                column(
+                    width = 6,
+                    h1("Jitter plot"), column(width = 12, plotOutput(outputId = "jitterplot")),
+                    h1("Scatter plot"), column(width = 12, plotOutput(outputId = "scatterplot"))
+                ),
+                column(
+                    width = 6,
+                    h1("Heat map"), column(width = 12, plotOutput(outputId = "heatmap"))
+                )
+            )
         )
     ))
 
