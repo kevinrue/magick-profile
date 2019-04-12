@@ -20,7 +20,7 @@ ui <- fluidPage(# Application title
         sidebarPanel(
             fileInput(
                 inputId = "imageFile",
-                label = "Input  file",
+                label = "Upload an image",
                 multiple = FALSE,
                 accept = c("png")
             ),
@@ -57,6 +57,7 @@ ui <- fluidPage(# Application title
         
         # Show a plot of the generated distribution
         mainPanel(
+            uiOutput(outputId = "example"),
             h1("Jitter plot"), column(width = 12, plotOutput(outputId = "jitterplot")),
             h1("Scatter plot"), column(width = 12, plotOutput(outputId = "scatterplot")),
             h1("Heat map"), column(width = 12, plotOutput(outputId = "heatmap"))
@@ -103,6 +104,15 @@ server <- function(input, output) {
             jitter = input$point_jitter,
             axis_label_prefix = input$axis_prefix
         )
+    })
+    
+    output$example <- renderUI({
+        if (is.null(input$imageFile)) {
+            return(tagList(
+                "Example from: ", a("https://www.kennedy.ox.ac.uk/team/kevin-rue-albrecht")
+            ))
+        }
+        return()
     })
 }
 
