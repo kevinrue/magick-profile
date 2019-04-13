@@ -52,6 +52,14 @@ ui <- fluidPage(# Application title
                 inputId = "axis_prefix",
                 label = "Axis label prefix",
                 value = "TSNE"
+            ),
+            numericInput(
+                inputId = "k_centers",
+                label = "K-mean clusters",
+                value = 1,
+                min = 1,
+                max = 20,
+                step = 1
             )
         ),
 
@@ -138,7 +146,8 @@ server <- function(input, output) {
                 downsample = input$downsample,
                 point_size = input$point_size,
                 jitter = input$point_jitter,
-                axis_label_prefix = input$axis_prefix
+                axis_label_prefix = input$axis_prefix,
+                k_centers = input$k_centers
             )
         },
         message = "Generating a jitterplot...")

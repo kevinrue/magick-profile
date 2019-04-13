@@ -69,7 +69,8 @@ make_jitterplot <- function(matrix,
                             downsample = FALSE,
                             point_size = 1,
                             jitter = 1,
-                            axis_label_prefix = "TSNE") {
+                            axis_label_prefix = "TSNE",
+                            k_centers = 1) {
     if (is.null(matrix)) {
         return(plot.new())
     }
@@ -88,6 +89,8 @@ make_jitterplot <- function(matrix,
         )
         xy_coord <- xy_coord[keep,]
     }
+    # Identify clusters
+    xy_coord$kmean <- as.factor(kmeans(x = as.matrix(xy_coord[, c("row", "col")]), centers = k_centers)$cluster)
     # Make coordinates look centered
     x_center <- x_range[2] / 2
     y_center <- -y_range[2] / 2
@@ -97,13 +100,14 @@ make_jitterplot <- function(matrix,
     y_range <- y_range + y_center # we work in negative values here
     # Plot
     ggplot(xy_coord) +
-        geom_jitter(aes(row, col),
+        geom_jitter(aes(row, col, color=kmean),
                     size = point_size,
                     width = jitter,
                     height = jitter) +
         coord_cartesian(xlim = x_range, ylim = y_range) +
         labs(x = paste(axis_label_prefix, 1L),
              y = paste(axis_label_prefix, 2L)) +
+        guides(color="none") +
         theme(panel.background = element_blank())
 }
 
