@@ -87,7 +87,7 @@ ui <- fluidPage(# Application title
         )
     ))
 
-defaultImageURL <- "https://res.cloudinary.com/dwccfildc/c_limit,w_1140/v1523428401/kennedy/haiku.profile/55404b0dd6a64cc5800605c46bc3b694/haiku.profiles.portrait/7f55c8cd346a42429d7a6264f752649f/image.jpg"
+defaultImageURL <- "https://raw.githubusercontent.com/kevinrue/kevinrue.github.io/master/files/kennedy.jpg"
 defaultImageObject <- image_read(path = defaultImageURL)
 defaultImageMatrix <- make_matrix(defaultImageObject, type = "integer")
 
@@ -152,11 +152,11 @@ server <- function(input, output) {
         },
         message = "Generating a jitterplot...")
     })
-    
+
     output$example <- renderUI({
         if (is.null(input$imageFile)) {
             return(tagList(
-                "Example from: ", a("https://www.kennedy.ox.ac.uk/team/kevin-rue-albrecht")
+                "Example from: ", a("https://raw.githubusercontent.com/kevinrue/kevinrue.github.io/master/files/kennedy.jpg")
             ))
         }
         return()
