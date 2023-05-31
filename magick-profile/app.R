@@ -87,7 +87,7 @@ ui <- fluidPage(# Application title
         )
     ))
 
-defaultImageURL <- "https://raw.githubusercontent.com/kevinrue/kevinrue.github.io/master/files/kennedy.jpg"
+defaultImageURL <- "https://kevinrue.github.io/files/kennedy.jpg"
 defaultImageObject <- image_read(path = defaultImageURL)
 defaultImageMatrix <- make_matrix(defaultImageObject, type = "integer")
 
@@ -118,7 +118,7 @@ server <- function(input, output) {
             image_write(tempfile(fileext='jpg'), format = 'jpg')
         # Return a list
         list(src = tmpfile, contentType = "image/jpeg")
-    })
+    }, deleteFile=TRUE)
 
     output$heatmap <- renderPlot({
         withProgress({
