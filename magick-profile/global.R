@@ -3,8 +3,10 @@ require(ComplexHeatmap)
 require(ggplot2)
 require(iSEE)
 
-make_matrix <- function(object, type = "numeric") {
-    flat <- image_flatten(object, 'Modulate')
+make_matrix <- function(object, operator = c("Modulate", "Threshold"), type = "numeric") {
+  print(operator)
+  operator <- match.arg(operator)
+    flat <- image_flatten(object, operator)
     # flat
     data <- image_data(flat)
     # data

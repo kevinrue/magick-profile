@@ -24,6 +24,12 @@ ui <- fluidPage(# Application title
                 multiple = FALSE,
                 accept = c("png")
             ),
+            selectInput(
+                inputId = "flatten_operator",
+                label = "Flattening operator",
+                choices = c("Modulate", "Threshold"),
+                selected = "Modulate"
+            ),
             numericInput(
                 inputId = "downsample",
                 label = "Resolution",
@@ -107,7 +113,7 @@ server <- function(input, output) {
 
     observeEvent(rObjects$imageObject, {
         withProgress({
-            rObjects$imageMatrix <- make_matrix(rObjects$imageObject)
+            rObjects$imageMatrix <- make_matrix(rObjects$imageObject, input$flatten_operator)
         },
         message = "Generating matrix from image...")
     })
@@ -156,7 +162,7 @@ server <- function(input, output) {
     output$example <- renderUI({
         if (is.null(input$imageFile)) {
             return(tagList(
-                "Example from: ", a("https://raw.githubusercontent.com/kevinrue/kevinrue.github.io/master/files/kennedy.jpg")
+                "Example from: ", a(defaultImageURL)
             ))
         }
         return()
