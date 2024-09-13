@@ -1,7 +1,7 @@
 library(dbscan)
 source("magick-profile/global.R")
 set.seed(1)
-img_raw <- image_read(path = "~/Downloads/radcliffe-camera.jpg")
+img_raw <- image_read(path = "~/Desktop/Screenshot 2024-09-13 at 10.33.37.png")
 str(img_raw)
 img_matrix <- make_matrix(img_raw)
 dim(img_matrix)
@@ -9,15 +9,22 @@ img_matrix[1:4, 1:4]
 gg <- make_jitterplot(img_matrix, downsample = 150, point_size = 1, jitter = 5)
 gg_data <- gg$data
 head(gg_data)
-gg_data <- subset(gg_data, col < 550)
+# gg_data <- subset(gg_data, col < 550)
+gg_data <- subset(gg_data, row > -250 & row < 460)
 gg_data$knndist <- kNNdist(as.matrix(gg_data), k = 7)
 # gg_data$cluster <- cut(gg_data$knndist, seq(min(gg_data$knndist), max(gg_data$knndist), length.out = 10))
 gg_data$cluster <- cut(gg_data$knndist, unique(quantile(gg_data$knndist, probs = seq(0, 1, length.out = 12))))
+
+gg_data$dbscan <- as.factor(dbscan(as.matrix(gg_data[, 1:2]), eps = 15, minPts = 3)$cluster)
+
+ggplot(gg_data, aes(row, col, colour = dbscan)) +
+  geom_jitter(size = 0.5, width = 3, height = 3)
+
+gg_data <- subset(gg_data, dbscan == 1)
+
 ggplot(gg_data, aes(row, col, colour = cluster)) +
   geom_jitter(size = 0.5, width = 3, height = 3) +
   theme_void() +
   guides(colour = "none") +
-  # scale_colour_brewer(palette = "Paired") +
   scale_colour_brewer(palette = "Paired")
-
 # RColorBrewer::display.brewer.all()
