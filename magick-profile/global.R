@@ -6,13 +6,13 @@ require(iSEE)
 make_matrix <- function(object, operator = c("Modulate", "Threshold"), type = "numeric") {
   print(operator)
   operator <- match.arg(operator)
-    flat <- image_flatten(object, operator)
-    # flat
-    data <- image_data(flat)
-    # data
-    non_white <- data[1, ,] != "ff"
-    storage.mode(non_white) <- "integer"
-    non_white
+  flat <- image_flatten(object, operator)
+  # flat
+  data <- image_data(flat)
+  # data
+  non_white <- data[1, ,] != "ff"
+  storage.mode(non_white) <- "integer"
+  non_white
 }
 
 make_heatmap <- function(matrix) {
