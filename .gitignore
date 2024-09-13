@@ -6,3 +6,7 @@
 renv/
 renv.lock
 magick-profile.Rproj
+*.jpg
+*.png
+*.pdf
+.DS_Store
